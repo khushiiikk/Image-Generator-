@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DALL-E Image Generator | Generative AI</title>
+  <meta name="description" content="Generate stunning AI images from text prompts using DALL-E and OpenAI. Powered by Flask and Replit." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0f;
+      --surface: #18181b;
+      --surface-2: #27272a;
+      --border: #3f3f46;
+      --text: #fafafa;
+      --text-muted: #a1a1aa;
+      --accent: #7c3aed;
+      --accent-hover: #6d28d9;
+      --accent-light: #a78bfa;
+      --success: #10b981;
+      --error: #ef4444;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--surface);
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), #06b6d4);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    header .badge {
+      margin-left: auto;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--accent-light);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    main {
+      flex: 1;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .hero {
+      text-align: center;
+    }
+
+    .hero h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .generator-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+
+    .input-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    textarea {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.75rem 1rem;
+      resize: vertical;
+      min-height: 80px;
+      width: 100%;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    select {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 0.65rem 0.9rem;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      min-width: 130px;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-generate {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-generate:hover { background: var(--accent-hover); }
+    .btn-generate:active { transform: scale(0.98); }
+    .btn-generate:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 0.5rem 0;
+    }
+
+    .status-bar.visible { display: flex; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .error-msg {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      color: #fca5a5;
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    .gallery-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .gallery-section h3 .count {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.7rem;
+      padding: 0.1rem 0.5rem;
+      color: var(--accent-light);
+    }
+
+    .gallery-empty {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 3rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .gallery-empty .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .gallery-empty p { font-size: 0.9rem; }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .gallery-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.15s, transform 0.15s;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .gallery-item:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-item .item-meta {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .gallery-item .item-prompt {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-sm {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.65rem;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .btn-sm:hover {
+      color: var(--text);
+      border-color: var(--accent-light);
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      .form-row { flex-direction: column; }
+      .hero h2 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🎨</div>
+    <h1>DALL-E Image Generator</h1>
+    <span class="badge">Generative AI</span>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h2>Turn Words Into Stunning Images</h2>
+      <p>Type a prompt below and let AI generate your vision in seconds.</p>
+    </div>
+
+    <div class="generator-card">
+      <div class="input-group">
+        <label>Your Prompt</label>
+        <textarea id="prompt" placeholder="A serene Japanese garden at sunset with cherry blossoms, photorealistic, golden hour lighting…" rows="3"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="input-group">
+          <label>Image Size</label>
+          <select id="size">
+            <option value="1024x1024">1024 × 1024 (Square)</option>
+            <option value="1024x1536">1024 × 1536 (Portrait)</option>
+            <option value="1536x1024">1536 × 1024 (Landscape)</option>
+            <option value="auto">Auto</option>
+          </select>
+        </div>
+        <button class="btn-generate" id="generateBtn" onclick="generateImage()">
+          <div class="spinner" id="spinner"></div>
+          <span id="btnText">✨ Generate</span>
+        </button>
+      </div>
+      <div class="status-bar" id="statusBar">
+        <div class="status-dot"></div>
+        <span>Generating your image, this may take 10–20 seconds…</span>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="gallery-section">
+      <h3>
+        Generated Images
+        <span class="count" id="countBadge">0</span>
+      </h3>
+      <div class="gallery-empty" id="emptyState">
+        <div class="icon">🖼️</div>
+        <p>Your generated images will appear here.</p>
+      </div>
+      <div class="gallery-grid" id="galleryGrid" style="display:none;"></div>
+    </div>
+  </main>
+
+  <footer>
+    Built with Flask &amp; OpenAI DALL-E · Powered by Replit
+  </footer>
+
+  <script>
+    let imageCount = 0;
+
+    async function generateImage() {
+      const prompt = document.getElementById('prompt').value.trim();
+      const size = document.getElementById('size').value;
+      const btn = document.getElementById('generateBtn');
+      const spinner = document.getElementById('spinner');
+      const btnText = document.getElementById('btnText');
+      const statusBar = document.getElementById('statusBar');
+      const errorMsg = document.getElementById('errorMsg');
+
+      if (!prompt) {
+        showError('Please enter a prompt before generating.');
+        return;
+      }
+
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      btnText.textContent = 'Generating…';
+      statusBar.classList.add('visible');
+      errorMsg.classList.remove('visible');
+
+      try {
+        const res = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, size }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Generation failed. Please try again.');
+        }
+
+        addToGallery(data.b64_json, data.prompt, data.size);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        btnText.textContent = '✨ Generate';
+        statusBar.classList.remove('visible');
+      }
+    }
+
+    function addToGallery(b64, prompt, size) {
+      imageCount++;
+      document.getElementById('countBadge').textContent = imageCount;
+      document.getElementById('emptyState').style.display = 'none';
+      const grid = document.getElementById('galleryGrid');
+      grid.style.display = 'grid';
+
+      const src = 'data:image/png;base64,' + b64;
+
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      item.innerHTML = `
+        <img src="${src}" alt="${escapeHtml(prompt)}" loading="lazy" />
+        <div class="item-meta">
+          <div class="item-prompt">${escapeHtml(prompt)}</div>
+          <div class="item-actions">
+            <button class="btn-sm" onclick="downloadImage('${src}', ${imageCount})">⬇ Download</button>
+            <button class="btn-sm" onclick="reusePrompt('${escapeAttr(prompt)}')">↩ Reuse</button>
+          </div>
+        </div>
+      `;
+      grid.prepend(item);
+    }
+
+    function downloadImage(src, idx) {
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = `dalle-image-${idx}.png`;
+      a.click();
+    }
+
+    function reusePrompt(prompt) {
+      document.getElementById('prompt').value = prompt;
+      document.getElementById('prompt').focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = '⚠ ' + msg;
+      el.classList.add('visible');
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function escapeAttr(str) {
+      return str.replace(/'/g,"\\'");
+    }
+
+    document.getElementById('prompt').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generateImage();
+    });
+  </script>
+</body>
+</html>
